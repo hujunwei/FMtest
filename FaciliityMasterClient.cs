@@ -31,6 +31,12 @@ namespace FMtest
         /// </returns>
         public static List<string> GetQualifierValueFromFacilityMaster(string qualifierName, string url)
         {
+            if (string.IsNullOrEmpty(qualifierName))
+                throw new ArgumentException();
+
+            if (string.IsNullOrEmpty(url))
+                throw new ArgumentException();
+
             var result = new HashSet<string>();
             var jArrayResult = GetJArrayResultFromFacilityMaster(url);
             if (jArrayResult == null)
@@ -61,6 +67,9 @@ namespace FMtest
         /// </returns>
         private static JArray GetJArrayResultFromFacilityMaster(string url)
         {
+            if (string.IsNullOrEmpty(url))
+                throw new ArgumentException();
+
             var response = QueryFacilityMaster(url);
             if (response == null)
                 return null;
@@ -83,6 +92,11 @@ namespace FMtest
         /// </returns>
         public static List<string> GetQualifierValueFromFacilityMaster2(string qualifierName, string url)
         {
+            if (string.IsNullOrEmpty(qualifierName))
+                throw new ArgumentException();
+            if (string.IsNullOrEmpty(url))
+                throw new ArgumentException();
+
             var result = new HashSet<string>();
             var facilities = GetFacilityListFromFacilityMaster(url);
             if (qualifierName.Equals("AzureGeo"))
@@ -112,6 +126,9 @@ namespace FMtest
         /// </returns>
         private static IEnumerable<Facility> GetFacilityListFromFacilityMaster(string url)
         {
+            if (string.IsNullOrEmpty(url))
+                throw new ArgumentException();
+
             var response = QueryFacilityMaster(url);
             if (response == null)
                 return null;
@@ -130,6 +147,9 @@ namespace FMtest
         /// <exception cref="Exception">Certificate not found</exception>
         private static HttpResponseMessage QueryFacilityMaster(string facilityMasterApi)
         {
+            if (string.IsNullOrEmpty(facilityMasterApi))
+                throw new ArgumentException();
+
             var certificate = GetCertificateFromStore(CertficateThumbprint);
             //var thumbprint = "90128E7726EF898920B9CBBE724FCA3BE97C2ED2";
             //X509Certificate2 certificate = GetCertificateFromStore(thumbprint);
@@ -159,6 +179,9 @@ namespace FMtest
         /// </returns>
         private static X509Certificate2 GetCertificateFromStore(string thumbprint)
         {
+            if (string.IsNullOrEmpty(thumbprint))
+                throw new ArgumentException();
+
             var certStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
             certStore.Open(OpenFlags.ReadOnly);
             var certCollection = certStore.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, true);
