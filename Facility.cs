@@ -9,11 +9,13 @@
 
     public class AzureGeo
     {
+        public string Id;
         public string Name { get; set; }
     }
 
     public class AzureRegion
     {
+        public string Id;
         public string Name { get; set; }
     }
 }

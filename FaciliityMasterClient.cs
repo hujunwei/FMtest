@@ -15,11 +15,14 @@ namespace FMtest
         /// <summary>
         /// The default address
         /// </summary>
-        private const string DefaultAddress = "https://facilitymastertest.cloudapp.net/";
+        private const string FacilityMasterBaseUrl = "https://facilitymastertest.cloudapp.net/";
         /// <summary>
         /// The certficate thumbprint
         /// </summary>
-        private const string CertficateThumbprint = "4AE733DB8F10E8BCC555FF17AE3FCB8096234960";
+        //private const string CertficateThumbprint = "4AE733DB8F10E8BCC555FF17AE3FCB8096234960";
+        private const string CertficateThumbprint = "90128E7726EF898920B9CBBE724FCA3BE97C2ED2";
+
+
 
         /// <summary>
         /// Gets the qualifier value from facility master using JArray to query the target date.
@@ -137,6 +140,89 @@ namespace FMtest
         }
 
 
+
+
+
+
+
+
+
+
+        /// <summary>
+        /// Gets the facility data that will be used for Qualifier.
+        /// </summary>
+        /// <param name="attributeType">Type of the attribute.</param>
+        /// <returns>A List of string used for Qualifier value</returns>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="Exception">
+        /// QueryFacilityMaster returns insuccess response
+        /// </exception>
+        public static List<string> GetFacilityData(string attributeType)
+        {
+            if (string.IsNullOrEmpty(attributeType))
+                throw new ArgumentException();
+
+            var result = new HashSet<string>();
+            if (attributeType == "AzureGeo")
+            {
+                var response = QueryFacilityMaster("api/Attribute?Type=" + attributeType);
+                if (response == null)
+                    throw new Exception("QueryFacilityMaster returns insuccess response");
+
+               
+                //Parse response to JArray 
+                var responseContent = response.Content.ReadAsStreamAsync().Result;
+                JsonReader jsonReader = new JsonTextReader(new StreamReader(responseContent));
+                var jArrayResult = (JArray)JToken.ReadFrom(jsonReader);
+
+                foreach (var jToken in jArrayResult)
+                {
+                    if (jToken == null) continue;
+                    var attributeItemName = jToken["Name"];
+                    if (attributeItemName == null) continue;
+                    if (string.IsNullOrEmpty(attributeItemName.ToString()))
+                        continue;
+                    result.Add(attributeItemName.ToString());
+                }
+            }
+            else if (attributeType == "AzureRegion")
+            {
+                var response = QueryFacilityMaster("api/Attribute?Type=AzureGeo");
+                if (response == null)
+                    throw new Exception("QueryFacilityMaster returns insuccess response");
+
+                //Parse response to JArray 
+                var responseContent = response.Content.ReadAsStreamAsync().Result;
+                JsonReader jsonReader = new JsonTextReader(new StreamReader(responseContent));
+                var jArrayResult = (JArray)JToken.ReadFrom(jsonReader);
+                foreach (var jToken in jArrayResult)
+                {
+                    if (jToken == null) continue;
+                    var azureRegions = jToken["AzureRegions"];
+                    if (azureRegions == null) continue;
+                    foreach (var jToken2 in azureRegions)
+                    {
+                        //if (jToken2["Type"].ToString() != attributeType) continue;
+                        var azureRegionName = jToken2["Name"];
+                        if (string.IsNullOrEmpty(azureRegionName.ToString()))
+                            continue;
+                        result.Add(azureRegionName.ToString());
+                    }
+                }
+            }
+            return result.ToList();
+        }
+
+
+
+
+
+
+
+
+
+
+
         /// <summary>
         /// Queries the result.
         /// </summary>
@@ -151,8 +237,7 @@ namespace FMtest
                 throw new ArgumentException();
 
             var certificate = GetCertificateFromStore(CertficateThumbprint);
-            //var thumbprint = "90128E7726EF898920B9CBBE724FCA3BE97C2ED2";
-            //X509Certificate2 certificate = GetCertificateFromStore(thumbprint);
+
 
             if (certificate == null)
                 throw new Exception("Certificate not found");
@@ -161,7 +246,7 @@ namespace FMtest
             var handler = new WebRequestHandler();
             handler.ClientCertificates.Add(certificate);
             handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-            var httpClient = new HttpClient(handler) { BaseAddress = new Uri(DefaultAddress) };
+            var httpClient = new HttpClient(handler) { BaseAddress = new Uri(FacilityMasterBaseUrl) };
 
 
             //Request based on Facility Master api
